@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".ui.activities.NewRoute">
+
+    <EditText
+        android:id="@+id/et_start_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Local de partida"
+        android:inputType="text"
+        android:padding="12dp"
+        android:background="@drawable/rounded_edit_text"/>
+
+    <EditText
+        android:id="@+id/et_destination"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Destino"
+        android:inputType="text"
+        android:padding="12dp"
+        android:background="@drawable/rounded_edit_text"
+        android:layout_marginTop="8dp"/>
+
+    <LinearLayout
+        android:id="@+id/stops_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btn_add_stop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Adicionar parada"
+        android:layout_marginTop="8dp"/>
+
+    <Button
+        android:id="@+id/btn_calculate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Calcular"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>

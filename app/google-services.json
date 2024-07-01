@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "823067677741",
+    "project_id": "routeplanning-426615",
+    "storage_bucket": "routeplanning-426615.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823067677741:android:6d05ae06b189a32332d4a4",
+        "android_client_info": {
+          "package_name": "com.eazevedo.routeplanning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuG_9rgggg9assPDtzFq0uLwzbUQ-KySI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
