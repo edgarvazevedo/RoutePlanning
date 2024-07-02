@@ -17,9 +17,17 @@ import com.eazevedo.routeplanning.R;
 import com.eazevedo.routeplanning.ui.adapters.RouteRequest;
 import com.eazevedo.routeplanning.ui.adapters.RouteResponse;
 import com.eazevedo.routeplanning.services.RetrofitClient;
+import com.google.android.gms.common.api.Status;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -32,19 +40,57 @@ public class NewRoute extends AppCompatActivity {
 
     private LinearLayout stopsContainer;
     private Button addStopButton;
-    private EditText startLocation;
-    private EditText destination;
     private Button calculateButton;
     private int stopCount = 0;
     private static final int MAX_STOPS = 5;
+    private String startLocation;
+    private String destination;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_route);
 
-        startLocation = findViewById(R.id.et_start_location);
-        destination = findViewById(R.id.et_destination);
+        // Initialize the SDK
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
+            Log.d(TAG, "Places API Initialized.");
+        }
+
+        // Para o ponto de partida:
+        AutocompleteSupportFragment autocompleteStartLocation = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_start_location);
+        autocompleteStartLocation.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        autocompleteStartLocation.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+                startLocation = place.getName();
+            }
+
+            @Override
+            public void onError(@NonNull Status status) {
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
+        // Para o destino:
+        AutocompleteSupportFragment autocompleteDestination = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
+        autocompleteDestination.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+        autocompleteDestination.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(@NonNull Place place) {
+                destination = place.getName();
+            }
+
+            @Override
+            public void onError(@NonNull Status status) {
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
+        //startLocation = findViewById(R.id.et_start_location);
+        //destination = findViewById(R.id.et_destination);
         stopsContainer = findViewById(R.id.stops_container);
         addStopButton = findViewById(R.id.btn_add_stop);
         calculateButton = findViewById(R.id.btn_calculate);
@@ -76,10 +122,12 @@ public class NewRoute extends AppCompatActivity {
     }
 
     private void calculateRoute() {
-        String originAddress = startLocation.getText().toString();
-        String destinationAddress = destination.getText().toString();
-        List<RouteRequest.Location> stops = new ArrayList<>();
+        if (startLocation == null || startLocation.isEmpty() || destination == null || destination.isEmpty()) {
+            Toast.makeText(this, "Por favor, preencha todos os campos obrigatórios.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        List<RouteRequest.Location> stops = new ArrayList<>();
         for (int i = 0; i < stopsContainer.getChildCount(); i++) {
             View stopView = stopsContainer.getChildAt(i);
             EditText stopEditText = stopView.findViewById(R.id.et_stop);
@@ -87,8 +135,8 @@ public class NewRoute extends AppCompatActivity {
         }
 
         RouteRequest request = new RouteRequest(
-                new RouteRequest.Location(originAddress),
-                new RouteRequest.Location(destinationAddress),
+                new RouteRequest.Location(startLocation),
+                new RouteRequest.Location(destination),
                 stops
         );
 
@@ -122,10 +170,34 @@ public class NewRoute extends AppCompatActivity {
                 Toast.makeText(NewRoute.this, "Erro ao calcular rota", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private void displayResults(List<Integer> optimizedIndexes) {
+        if (optimizedIndexes == null) {
+            Log.e(TAG, "Lista de índices intermediários otimizada é nula");
+            Toast.makeText(this, "Erro ao calcular rota: Lista de índices intermediários otimizada é nula", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String origin = startLocation;
+        String destination = this.destination;
+
+        List<String> intermediates = new ArrayList<>();
+        for (int i = 0; i < stopsContainer.getChildCount(); i++) {
+            EditText stopEditText = (EditText) stopsContainer.getChildAt(i).findViewById(R.id.et_stop);
+            intermediates.add(stopEditText.getText().toString());
+        }
+
+        Intent intent = new Intent(this, MapsActivity.class);
+        intent.putExtra("origin", origin);
+        intent.putExtra("destination", destination);
+        intent.putStringArrayListExtra("intermediates", (ArrayList<String>) intermediates);
+        intent.putIntegerArrayListExtra("optimizedIndexes", (ArrayList<Integer>) optimizedIndexes);
+        startActivity(intent);
+    }
+
+
+   /* private void displayResults(List<Integer> optimizedIndexes) {
         if (optimizedIndexes == null) {
             Log.e(TAG, "Lista de índices intermediários otimizada é nula");
             Toast.makeText(this, "Erro ao calcular rota: Lista de índices intermediários otimizada é nula", Toast.LENGTH_SHORT).show();
@@ -139,8 +211,8 @@ public class NewRoute extends AppCompatActivity {
         Log.i(TAG, result.toString());
         Toast.makeText(this, result.toString(), Toast.LENGTH_LONG).show();
 
-        String origin = startLocation.getText().toString();
-        String destination = this.destination.getText().toString();
+        String origin = startLocation;
+        String destination = this.destination;
 
         List<String> intermediates = new ArrayList<>();
         for (int i = 0; i < stopsContainer.getChildCount(); i++) {
@@ -178,7 +250,5 @@ public class NewRoute extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Google Maps não está instalado", Toast.LENGTH_SHORT).show();
         }
-    }
-
-
+    }*/
 }
