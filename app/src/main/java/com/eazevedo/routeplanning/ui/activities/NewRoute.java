@@ -1,7 +1,8 @@
 package com.eazevedo.routeplanning.ui.activities;
 
+import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,15 +15,18 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.eazevedo.routeplanning.R;
+import com.eazevedo.routeplanning.services.RetrofitClient;
+import com.eazevedo.routeplanning.ui.activities.MapsActivity;
 import com.eazevedo.routeplanning.ui.adapters.RouteRequest;
 import com.eazevedo.routeplanning.ui.adapters.RouteResponse;
-import com.eazevedo.routeplanning.services.RetrofitClient;
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.common.api.Status;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.gson.Gson;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -30,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.google.android.gms.ads.AdView;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,11 +53,17 @@ public class NewRoute extends AppCompatActivity {
     private String startLocation;
     private String destination;
     private boolean isRoundTrip;
+    private AdView adView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_route);
+
+        adView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
+
 
         // Initialize the SDK
         if (!Places.isInitialized()) {
@@ -122,12 +133,12 @@ public class NewRoute extends AppCompatActivity {
                     getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
 
             if (isChecked) {
-                destination = startLocation;
+                destination = startLocation;  // Define o destino como o ponto de partida
                 if (destinationFragment != null) {
                     getSupportFragmentManager().beginTransaction().hide(destinationFragment).commit();
                 }
             } else {
-                destination = null;
+                destination = null;  // Reseta o destino
                 if (destinationFragment != null) {
                     getSupportFragmentManager().beginTransaction().show(destinationFragment).commit();
                 }
@@ -158,6 +169,9 @@ public class NewRoute extends AppCompatActivity {
             EditText stopEditText = stopView.findViewById(R.id.et_stop);
             stops.add(new RouteRequest.Location(stopEditText.getText().toString()));
         }
+
+        // Salvar os dados no SharedPreferences
+        saveRouteDataToSharedPreferences(startLocation, destination, stops, isRoundTrip);
 
         RouteRequest request = new RouteRequest(
                 new RouteRequest.Location(startLocation),
@@ -195,6 +209,21 @@ public class NewRoute extends AppCompatActivity {
                 Toast.makeText(NewRoute.this, "Erro ao calcular rota", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void saveRouteDataToSharedPreferences(String startLocation, String destination, List<RouteRequest.Location> stops, boolean isRoundTrip) {
+        SharedPreferences sharedPreferences = getSharedPreferences("RoutePrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("startLocation", startLocation);
+        editor.putString("destination", destination);
+        editor.putBoolean("isRoundTrip", isRoundTrip);
+
+        // Salva as paradas como uma string JSON
+        String stopsJson = new Gson().toJson(stops);
+        editor.putString("stops", stopsJson);
+
+        editor.apply();
     }
 
     private void displayResults(List<Integer> optimizedIndexes) {
