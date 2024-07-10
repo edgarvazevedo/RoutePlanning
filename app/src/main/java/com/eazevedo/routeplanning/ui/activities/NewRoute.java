@@ -22,6 +22,7 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+import com.google.android.material.materialswitch.MaterialSwitch;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -41,10 +42,12 @@ public class NewRoute extends AppCompatActivity {
     private LinearLayout stopsContainer;
     private Button addStopButton;
     private Button calculateButton;
+    private MaterialSwitch roundTripSwitch;
     private int stopCount = 0;
     private static final int MAX_STOPS = 5;
     private String startLocation;
     private String destination;
+    private boolean isRoundTrip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,9 @@ public class NewRoute extends AppCompatActivity {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
                 startLocation = place.getName();
+                if (isRoundTrip) {
+                    destination = startLocation; // Se for ida e volta, define o destino como o ponto de partida
+                }
             }
 
             @Override
@@ -80,7 +86,9 @@ public class NewRoute extends AppCompatActivity {
         autocompleteDestination.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(@NonNull Place place) {
-                destination = place.getName();
+                if (!isRoundTrip) {
+                    destination = place.getName();
+                }
             }
 
             @Override
@@ -89,11 +97,10 @@ public class NewRoute extends AppCompatActivity {
             }
         });
 
-        //startLocation = findViewById(R.id.et_start_location);
-        //destination = findViewById(R.id.et_destination);
         stopsContainer = findViewById(R.id.stops_container);
         addStopButton = findViewById(R.id.btn_add_stop);
         calculateButton = findViewById(R.id.btn_calculate);
+        roundTripSwitch = findViewById(R.id.switch_round_trip);
 
         addStopButton.setOnClickListener(v -> {
             if (stopCount < MAX_STOPS) {
@@ -108,6 +115,24 @@ public class NewRoute extends AppCompatActivity {
         });
 
         calculateButton.setOnClickListener(v -> calculateRoute());
+
+        roundTripSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            isRoundTrip = isChecked;
+            AutocompleteSupportFragment destinationFragment = (AutocompleteSupportFragment)
+                    getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
+
+            if (isChecked) {
+                destination = startLocation;
+                if (destinationFragment != null) {
+                    getSupportFragmentManager().beginTransaction().hide(destinationFragment).commit();
+                }
+            } else {
+                destination = null;
+                if (destinationFragment != null) {
+                    getSupportFragmentManager().beginTransaction().show(destinationFragment).commit();
+                }
+            }
+        });
     }
 
     private void addStopField() {
@@ -122,7 +147,7 @@ public class NewRoute extends AppCompatActivity {
     }
 
     private void calculateRoute() {
-        if (startLocation == null || startLocation.isEmpty() || destination == null || destination.isEmpty()) {
+        if (startLocation == null || startLocation.isEmpty() || (!isRoundTrip && (destination == null || destination.isEmpty()))) {
             Toast.makeText(this, "Por favor, preencha todos os campos obrigatórios.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -195,60 +220,4 @@ public class NewRoute extends AppCompatActivity {
         intent.putIntegerArrayListExtra("optimizedIndexes", (ArrayList<Integer>) optimizedIndexes);
         startActivity(intent);
     }
-
-
-   /* private void displayResults(List<Integer> optimizedIndexes) {
-        if (optimizedIndexes == null) {
-            Log.e(TAG, "Lista de índices intermediários otimizada é nula");
-            Toast.makeText(this, "Erro ao calcular rota: Lista de índices intermediários otimizada é nula", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        StringBuilder result = new StringBuilder("Ordem otimizada das paradas:\n");
-        for (Integer index : optimizedIndexes) {
-            result.append("Parada ").append(index).append("\n");
-        }
-        Log.i(TAG, result.toString());
-        Toast.makeText(this, result.toString(), Toast.LENGTH_LONG).show();
-
-        String origin = startLocation;
-        String destination = this.destination;
-
-        List<String> intermediates = new ArrayList<>();
-        for (int i = 0; i < stopsContainer.getChildCount(); i++) {
-            EditText stopEditText = (EditText) stopsContainer.getChildAt(i).findViewById(R.id.et_stop);
-            intermediates.add(stopEditText.getText().toString());
-        }
-
-        //para criar o url do google maps
-        StringBuilder uriBuilder = new StringBuilder("https://www.google.com/maps/dir/?api=1&travelmode=driving");
-
-        uriBuilder.append("&origin=").append(Uri.encode(origin));
-        uriBuilder.append("&destination=").append(Uri.encode(destination));
-
-        if (!optimizedIndexes.isEmpty()) {
-            uriBuilder.append("&waypoints=");
-            for (int i = 0; i < optimizedIndexes.size(); i++) {
-                int index = optimizedIndexes.get(i);
-                if (index >= 0 && index < intermediates.size()) {
-                    uriBuilder.append(Uri.encode(intermediates.get(index)));
-                    if (i < optimizedIndexes.size() - 1) {
-                        uriBuilder.append("|");
-                    }
-                }
-            }
-        }
-
-        String uriString = uriBuilder.toString();
-        Log.i(TAG, "URI do Google Maps: " + uriString);
-
-        // Inicie o Google Maps
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
-        intent.setPackage("com.google.android.apps.maps");
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
-        } else {
-            Toast.makeText(this, "Google Maps não está instalado", Toast.LENGTH_SHORT).show();
-        }
-    }*/
 }
