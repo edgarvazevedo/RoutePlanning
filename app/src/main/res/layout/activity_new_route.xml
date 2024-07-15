@@ -8,24 +8,28 @@
     android:padding="16dp"
     tools:context=".ui.activities.NewRoute">
 
-    <EditText
-        android:id="@+id/et_start_location"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Local de partida"
-        android:inputType="text"
-        android:padding="12dp"
-        android:background="@drawable/rounded_edit_text"/>
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switch_round_trip"
+        android:layout_width="150dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="200dp"
+        android:checked="false"
+        android:text="Ida e Volta"/>
 
-    <EditText
-        android:id="@+id/et_destination"
+    <fragment
+        android:id="@+id/autocomplete_start_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Destino"
-        android:inputType="text"
-        android:padding="12dp"
-        android:background="@drawable/rounded_edit_text"
-        android:layout_marginTop="8dp"/>
+        android:text="Partida"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+        android:layout_marginBottom="8dp"/>
+
+    <fragment
+        android:id="@+id/autocomplete_destination"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+        android:layout_marginBottom="8dp"/>
 
     <LinearLayout
         android:id="@+id/stops_container"
@@ -33,6 +37,19 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="8dp"/>
+
+    <ImageButton
+        android:id="@+id/btn_current_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_my_location_24"
+        android:contentDescription="Obter localização atual"
+        android:onClick="getCurrentLocation"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/autocomplete_start_location"/>
+
 
     <Button
         android:id="@+id/btn_add_stop"
@@ -47,4 +64,13 @@
         android:layout_height="wrap_content"
         android:text="Calcular"
         android:layout_marginTop="16dp"/>
+
+    <!-- AdView para exibir o anúncio de banner -->
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:adSize="BANNER"
+        app:adUnitId="ca-app-pub-6343825320127681/3054790476"/>
 </LinearLayout>

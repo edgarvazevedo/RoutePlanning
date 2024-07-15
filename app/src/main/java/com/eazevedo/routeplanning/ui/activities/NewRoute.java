@@ -1,8 +1,13 @@
 package com.eazevedo.routeplanning.ui.activities;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +18,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.eazevedo.routeplanning.R;
 import com.eazevedo.routeplanning.services.RetrofitClient;
@@ -21,6 +28,9 @@ import com.eazevedo.routeplanning.ui.adapters.RouteRequest;
 import com.eazevedo.routeplanning.ui.adapters.RouteResponse;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
@@ -28,13 +38,15 @@ import com.google.android.libraries.places.widget.listener.PlaceSelectionListene
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.gson.Gson;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+
 import com.google.android.gms.ads.AdView;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,6 +66,7 @@ public class NewRoute extends AppCompatActivity {
     private String destination;
     private boolean isRoundTrip;
     private AdView adView;
+    private static final int REQUEST_LOCATION_PERMISSION = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +76,6 @@ public class NewRoute extends AppCompatActivity {
         adView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
-
 
         // Initialize the SDK
         if (!Places.isInitialized()) {
@@ -209,6 +221,70 @@ public class NewRoute extends AppCompatActivity {
                 Toast.makeText(NewRoute.this, "Erro ao calcular rota", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getCurrentLocation(null);
+            } else {
+                Toast.makeText(this, "Permissão de localização não concedida", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public void getCurrentLocation(View view) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Solicita permissões se não estiverem concedidas
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
+            return;
+        }
+
+        // Cria um cliente de localização
+        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Obtém a última localização conhecida
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            // Utiliza a localização obtida
+                            Geocoder geocoder = new Geocoder(NewRoute.this, Locale.getDefault());
+                            try {
+                                List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                                if (!addresses.isEmpty()) {
+                                    Address address = addresses.get(0);
+                                    String currentLocation = address.getAddressLine(0);
+                                    // Preenche o campo de ponto de partida ou destino conforme necessário
+                                    if (startLocation == null || startLocation.isEmpty()) {
+                                        startLocation = currentLocation;
+                                        // Atualiza o campo de autocompletar se necessário
+                                        AutocompleteSupportFragment autocompleteStartLocation = (AutocompleteSupportFragment)
+                                                getSupportFragmentManager().findFragmentById(R.id.autocomplete_start_location);
+                                        if (autocompleteStartLocation != null) {
+                                            autocompleteStartLocation.setText(startLocation);
+                                        }
+                                    } else {
+                                        destination = currentLocation;
+                                        // Atualiza o campo de autocompletar se necessário
+                                        AutocompleteSupportFragment autocompleteDestination = (AutocompleteSupportFragment)
+                                                getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
+                                        if (autocompleteDestination != null) {
+                                            autocompleteDestination.setText(destination);
+                                        }
+                                    }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Toast.makeText(NewRoute.this, "Não foi possível obter a localização atual", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     private void saveRouteDataToSharedPreferences(String startLocation, String destination, List<RouteRequest.Location> stops, boolean isRoundTrip) {
