@@ -37,6 +37,7 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.gson.Gson;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,6 +56,8 @@ import retrofit2.Response;
 public class NewRoute extends AppCompatActivity {
 
     private static final String TAG = "NewRoute";
+
+    private MaterialButtonToggleGroup toggleGroup;
 
     private LinearLayout stopsContainer;
     private Button addStopButton;
@@ -77,7 +80,6 @@ public class NewRoute extends AppCompatActivity {
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
 
-        // Initialize the SDK
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
             Log.d(TAG, "Places API Initialized.");
@@ -123,7 +125,6 @@ public class NewRoute extends AppCompatActivity {
         stopsContainer = findViewById(R.id.stops_container);
         addStopButton = findViewById(R.id.btn_add_stop);
         calculateButton = findViewById(R.id.btn_calculate);
-        roundTripSwitch = findViewById(R.id.switch_round_trip);
 
         addStopButton.setOnClickListener(v -> {
             if (stopCount < MAX_STOPS) {
@@ -139,20 +140,25 @@ public class NewRoute extends AppCompatActivity {
 
         calculateButton.setOnClickListener(v -> calculateRoute());
 
-        roundTripSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            isRoundTrip = isChecked;
-            AutocompleteSupportFragment destinationFragment = (AutocompleteSupportFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
-
+        // MaterialButtonToggleGroup
+        toggleGroup = findViewById(R.id.toggleButton);
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
-                destination = startLocation;  // Define o destino como o ponto de partida
-                if (destinationFragment != null) {
-                    getSupportFragmentManager().beginTransaction().hide(destinationFragment).commit();
-                }
-            } else {
-                destination = null;  // Reseta o destino
-                if (destinationFragment != null) {
-                    getSupportFragmentManager().beginTransaction().show(destinationFragment).commit();
+                if (checkedId == R.id.buttonA) {
+                    isRoundTrip = false;
+                    AutocompleteSupportFragment destinationFragment = (AutocompleteSupportFragment)
+                            getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
+                    if (destinationFragment != null) {
+                        getSupportFragmentManager().beginTransaction().show(destinationFragment).commit();
+                    }
+                } else if (checkedId == R.id.buttonB) {
+                    isRoundTrip = true;
+                    destination = startLocation;  // Define o destino como o ponto de partida
+                    AutocompleteSupportFragment destinationFragment = (AutocompleteSupportFragment)
+                            getSupportFragmentManager().findFragmentById(R.id.autocomplete_destination);
+                    if (destinationFragment != null) {
+                        getSupportFragmentManager().beginTransaction().hide(destinationFragment).commit();
+                    }
                 }
             }
         });
@@ -228,7 +234,7 @@ public class NewRoute extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getCurrentLocation(null);
+                getCurrentLocation(null); // Tenta obter a localização novamente se a permissão for concedida
             } else {
                 Toast.makeText(this, "Permissão de localização não concedida", Toast.LENGTH_SHORT).show();
             }
@@ -236,6 +242,7 @@ public class NewRoute extends AppCompatActivity {
     }
 
     public void getCurrentLocation(View view) {
+        // Verifica se as permissões estão concedidas
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // Solicita permissões se não estiverem concedidas
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);

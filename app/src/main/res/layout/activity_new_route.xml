@@ -8,13 +8,26 @@
     android:padding="16dp"
     tools:context=".ui.activities.NewRoute">
 
-    <com.google.android.material.materialswitch.MaterialSwitch
-        android:id="@+id/switch_round_trip"
-        android:layout_width="150dp"
-        android:layout_height="15dp"
-        android:layout_marginStart="200dp"
-        android:checked="false"
-        android:text="Ida e Volta"/>
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            style="?attr/materialButtonOutlinedStyle"
+            android:id="@+id/buttonA"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="One-way" />
+
+        <com.google.android.material.button.MaterialButton
+            style="?attr/materialButtonOutlinedStyle"
+            android:id="@+id/buttonB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Round Trip" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <fragment
         android:id="@+id/autocomplete_start_location"
@@ -50,7 +63,6 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@id/autocomplete_start_location"/>
 
-
     <Button
         android:id="@+id/btn_add_stop"
         android:layout_width="match_parent"
@@ -68,6 +80,7 @@
     <!-- AdView para exibir o anúncio de banner -->
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
+        android:layout_marginTop="350dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
