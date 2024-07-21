@@ -58,7 +58,7 @@ public class LogInActivity extends AppCompatActivity {
 
                 if (email.isEmpty() || password.isEmpty()) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(LogInActivity.this);
-                    builder.setMessage("Please make sure you enter an email address and password!")
+                    builder.setMessage("Por favor, certifique-se de inserir um endereço de e-mail e senha!")
                             .setTitle("Error")
                             .setPositiveButton(android.R.string.ok, null);
                     AlertDialog dialog = builder.create();
@@ -69,7 +69,7 @@ public class LogInActivity extends AppCompatActivity {
                                 @Override
                                 public void onComplete(@NonNull Task<AuthResult> task) {
                                     if (task.isSuccessful()) {
-                                        Log.i(TAG, "User credentials valid");
+                                        Log.i(TAG, "Credenciais de usuário válidas");
                                         Intent intent = new Intent(LogInActivity.this, MainActivity.class);
                                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
