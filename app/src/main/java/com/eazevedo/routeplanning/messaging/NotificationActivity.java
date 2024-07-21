@@ -47,7 +47,7 @@ public class NotificationActivity extends AppCompatActivity {
                 FirebaseMessaging.getInstance().subscribeToTopic("news");
                 String msg = "Subscribed to news topic";
                 Log.d(TAG, msg);
-                Toast.makeText(NotificationActivity.this, msg, Toast.LENGTH_SHORT).show();
+               // Toast.makeText(NotificationActivity.this, msg, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -69,7 +69,7 @@ public class NotificationActivity extends AppCompatActivity {
                                 // Log and toast
                                 String msg = " token: " + token;
                                 Log.d(TAG, msg);
-                                Toast.makeText(NotificationActivity.this, TAG + msg, Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(NotificationActivity.this, TAG + msg, Toast.LENGTH_SHORT).show();
                             }
                         });
             }

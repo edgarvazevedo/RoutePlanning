@@ -9,6 +9,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -76,6 +77,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         intermediates = getIntent().getStringArrayListExtra("intermediates");
         optimizedIndexes = getIntent().getIntegerArrayListExtra("optimizedIndexes");
 
+        Log.d("MapsActivity", "Origin: " + origin);
+        Log.d("MapsActivity", "Destination: " + destination);
+        Log.d("MapsActivity", "Intermediates: " + intermediates);
+        Log.d("MapsActivity", "OptimizedIndexes: " + optimizedIndexes);
+
         // Adicionar botão para abrir no Google Maps
         Button btnOpenGoogleMaps = findViewById(R.id.btn_open_google_maps);
         btnOpenGoogleMaps.setOnClickListener(v -> openInGoogleMaps());
@@ -102,19 +108,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Adicionar origem
         LatLng originLatLng = getLocationFromAddress(origin);
-        routePoints.add(originLatLng);
+        if (originLatLng != null) {
+            routePoints.add(originLatLng);
+            mMap.addMarker(new MarkerOptions().position(originLatLng).title("Origem"));
+        }
 
         // Adicionar intermediários
         for (int index : optimizedIndexes) {
             if (index >= 0 && index < intermediates.size()) {
                 LatLng waypoint = getLocationFromAddress(intermediates.get(index));
-                routePoints.add(waypoint);
+                if (waypoint != null) {
+                    routePoints.add(waypoint);
+                    mMap.addMarker(new MarkerOptions().position(waypoint).title("Intermediário"));
+                }
             }
         }
 
         // Adicionar destino
         LatLng destinationLatLng = getLocationFromAddress(destination);
-        routePoints.add(destinationLatLng);
+        if (destinationLatLng != null) {
+            routePoints.add(destinationLatLng);
+            mMap.addMarker(new MarkerOptions().position(destinationLatLng).title("Destino"));
+        }
 
         // Configurar e adicionar polilinha ao mapa
         PolylineOptions polylineOptions = new PolylineOptions()
@@ -134,7 +149,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.animateCamera(cu);
     }
 
-
     private LatLng getLocationFromAddress(String strAddress) {
         Geocoder coder = new Geocoder(this);
         List<Address> address;
@@ -142,39 +156,39 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         try {
             address = coder.getFromLocationName(strAddress, 5);
-            if (address == null) {
-                return null;
+            if (address != null && !address.isEmpty()) {
+                Address location = address.get(0);
+                latLng = new LatLng(location.getLatitude(), location.getLongitude());
             }
-            Address location = address.get(0);
-            latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
         } catch (IOException e) {
             e.printStackTrace();
         }
         return latLng;
     }
 
-
     private void openInGoogleMaps() {
         StringBuilder uriBuilder = new StringBuilder("https://www.google.com/maps/dir/?api=1&travelmode=driving");
 
-        uriBuilder.append("&origin=").append(Uri.encode(origin));
-        uriBuilder.append("&destination=").append(Uri.encode(destination));
+        if (origin != null) {
+            uriBuilder.append("&origin=").append(Uri.encode(origin));
+        }
+        if (destination != null) {
+            uriBuilder.append("&destination=").append(Uri.encode(destination));
+        }
 
-        if (!optimizedIndexes.isEmpty()) {
+        if (intermediates != null && !intermediates.isEmpty()) {
             uriBuilder.append("&waypoints=");
-            for (int i = 0; i < optimizedIndexes.size(); i++) {
-                int index = optimizedIndexes.get(i);
-                if (index >= 0 && index < intermediates.size()) {
-                    uriBuilder.append(Uri.encode(intermediates.get(index)));
-                    if (i < optimizedIndexes.size() - 1) {
-                        uriBuilder.append("|");
-                    }
+            for (int i = 0; i < intermediates.size(); i++) {
+                uriBuilder.append(Uri.encode(intermediates.get(i)));
+                if (i < intermediates.size() - 1) {
+                    uriBuilder.append("|");
                 }
             }
         }
 
         String uriString = uriBuilder.toString();
+        Log.d("MapsActivity", "Google Maps URI: " + uriString);
+
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriString));
         intent.setPackage("com.google.android.apps.maps");
         if (intent.resolveActivity(getPackageManager()) != null) {

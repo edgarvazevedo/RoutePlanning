@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/start_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Location"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/destination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Destination"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/is_round_trip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Round Trip"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/stops"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stops"
+        android:textSize="16sp" />
+</LinearLayout>

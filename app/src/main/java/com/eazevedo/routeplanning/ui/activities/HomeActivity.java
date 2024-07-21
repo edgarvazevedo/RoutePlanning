@@ -5,20 +5,27 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.eazevedo.routeplanning.R;
+import com.eazevedo.routeplanning.auth.LogInActivity;
 import com.eazevedo.routeplanning.ui.adapters.TripAdapter;
 import com.eazevedo.routeplanning.db.Trip;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -42,8 +49,11 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         adView = findViewById(R.id.adView);
-        recyclerViewTrips = findViewById(R.id.recycler_view_trips);  // Certifique-se de que este ID está correto
+        recyclerViewTrips = findViewById(R.id.recycler_view_trips);
         fabAddTrip = findViewById(R.id.fab_add_trip);
 
         startLocationTextView = findViewById(R.id.start_location);
@@ -61,7 +71,7 @@ public class HomeActivity extends AppCompatActivity {
                 startActivity(intent);
 
                 // Para este exemplo, vamos apenas mostrar um Toast
-                Toast.makeText(HomeActivity.this, "Adicionar nova viagem", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(HomeActivity.this, "Adicionar nova viagem", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -96,6 +106,27 @@ public class HomeActivity extends AppCompatActivity {
             adView.destroy();
         }
         super.onDestroy();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_home, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_logout) {
+            // Realizar logout e redirecionar para a tela de login
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(HomeActivity.this, LogInActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void updateAddressToParadas() {
